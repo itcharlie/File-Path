@@ -6,6 +6,7 @@ use strict;
 use Cwd 'getcwd';
 use File::Basename ();
 use File::Spec     ();
+use Data::Dump;
 
 BEGIN {
     if ( $] < 5.006 ) {
@@ -97,46 +98,66 @@ sub mkpath {
     }
     else {
         my $options = pop @_;
+say STDERR "ZZZ: options in:";
+Data::Dump::pp($options);
         $arg->{mode} = delete $options->{mask} if exists $options->{mask};
-        $arg->{mode} = oct '777' unless exists $options->{mode};
-        ${ $arg->{error} } = [] if exists $options->{error};
+#        $arg->{mode} = oct '777' unless exists $options->{mode};
+        if (exists $options->{mode}) {
+            $arg->{mode} = $options->{mode};
+            delete $options->{mode};
+        }
+        else {
+            $arg->{mode} = oct '777';
+        }
+#        ${ $arg->{error} } = [] if exists $options->{error};
+        if (exists $options->{error}) {
+            ${ $arg->{error} } = [];
+            delete $options->{error};
+        }
+        $arg->{owner} = delete $options->{owner} if exists $options->{owner};
         $arg->{owner} = delete $options->{user} if exists $options->{user};
         $arg->{owner} = delete $options->{uid}  if exists $options->{uid};
-        if ( exists $options->{owner} and $options->{owner} =~ /\D/ ) {
-            my $uid = ( getpwnam $options->{owner} )[2];
+        if ( exists $arg->{owner} and $arg->{owner} =~ /\D/ ) {
+            my $uid = ( getpwnam $arg->{owner} )[2];
             if ( defined $uid ) {
                 $arg->{owner} = $uid;
             }
             else {
                 _error(
                     $arg,
-                    "unable to map $options->{owner} to a uid, ownership not changed"
+                    "unable to map $arg->{owner} to a uid, ownership not changed"
                 );
-                delete $options->{owner};
             }
         }
-        if ( exists $options->{group} and $options->{group} =~ /\D/ ) {
-            my $gid = ( getgrnam $options->{group} )[2];
+        $arg->{group} = delete $options->{group} if exists $options->{group};
+        if ( exists $arg->{group} and $arg->{group} =~ /\D/ ) {
+            my $gid = ( getgrnam $arg->{group} )[2];
             if ( defined $gid ) {
                 $arg->{group} = $gid;
             }
             else {
                 _error(
                     $arg,
-                    "unable to map $options->{group} to a gid, group ownership not changed"
+                    "unable to map $arg->{group} to a gid, group ownership not changed"
                 );
-                delete $options->{group};
             }
         }
-        if ( exists $options->{owner} and not exists $options->{group} ) {
+        if ( exists $arg->{owner} and not exists $arg->{group} ) {
             $arg->{group} = -1;    # chown will leave group unchanged
         }
-        if ( exists $options->{group} and not exists $options->{owner} ) {
+        if ( exists $arg->{group} and not exists $arg->{owner} ) {
             $arg->{owner} = -1;    # chown will leave owner unchanged
         }
+say STDERR "AAA: remaining options:";
+Data::Dump::pp($options, $arg);
+# How is it possible that at this point there is a key "" in $options?
         for (my ($k,$v) = each %{$options}) {
+say STDERR "<$k>";
+#            $arg->{$k} = $v if length($k);
             $arg->{$k} = $v;
         }
+say STDERR "BBB: arg for _mkpath:";
+Data::Dump::pp($arg);
         $paths = [@_];
     }
     return _mkpath( $arg, $paths );

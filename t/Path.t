@@ -245,7 +245,7 @@ is($count, $removed, "removed directory safe mode");
 # Y should exist
 # existence of E is neither here nor there
 $dir = catdir($tmp_base, 'E', updir(), 'Y');
-@created =mkpath($dir);
+@created = mkpath($dir);
 # 32
 cmp_ok(scalar(@created), '>=', 1, "made one or more dirs because of ..");
 # 33
