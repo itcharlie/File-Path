@@ -96,41 +96,46 @@ sub mkpath {
         $arg->{mode} = defined $mode ? $mode : oct '777';
     }
     else {
-        $arg = pop @_;
-        $arg->{mode} = delete $arg->{mask} if exists $arg->{mask};
-        $arg->{mode} = oct '777' unless exists $arg->{mode};
-        ${ $arg->{error} } = [] if exists $arg->{error};
-        $arg->{owner} = delete $arg->{user} if exists $arg->{user};
-        $arg->{owner} = delete $arg->{uid}  if exists $arg->{uid};
-        if ( exists $arg->{owner} and $arg->{owner} =~ /\D/ ) {
-            my $uid = ( getpwnam $arg->{owner} )[2];
+        my $options = pop @_;
+        $arg->{mode} = delete $options->{mask} if exists $options->{mask};
+        $arg->{mode} = oct '777' unless exists $options->{mode};
+        ${ $arg->{error} } = [] if exists $options->{error};
+        $arg->{owner} = delete $options->{user} if exists $options->{user};
+        $arg->{owner} = delete $options->{uid}  if exists $options->{uid};
+        if ( exists $options->{owner} and $options->{owner} =~ /\D/ ) {
+            my $uid = ( getpwnam $options->{owner} )[2];
             if ( defined $uid ) {
                 $arg->{owner} = $uid;
             }
             else {
-                _error( $arg,
-"unable to map $arg->{owner} to a uid, ownership not changed"
+                _error(
+                    $arg,
+                    "unable to map $options->{owner} to a uid, ownership not changed"
                 );
-                delete $arg->{owner};
+                delete $options->{owner};
             }
         }
-        if ( exists $arg->{group} and $arg->{group} =~ /\D/ ) {
-            my $gid = ( getgrnam $arg->{group} )[2];
+        if ( exists $options->{group} and $options->{group} =~ /\D/ ) {
+            my $gid = ( getgrnam $options->{group} )[2];
             if ( defined $gid ) {
                 $arg->{group} = $gid;
             }
             else {
-                _error( $arg,
-"unable to map $arg->{group} to a gid, group ownership not changed"
+                _error(
+                    $arg,
+                    "unable to map $options->{group} to a gid, group ownership not changed"
                 );
-                delete $arg->{group};
+                delete $options->{group};
             }
         }
-        if ( exists $arg->{owner} and not exists $arg->{group} ) {
+        if ( exists $options->{owner} and not exists $options->{group} ) {
             $arg->{group} = -1;    # chown will leave group unchanged
         }
-        if ( exists $arg->{group} and not exists $arg->{owner} ) {
+        if ( exists $options->{group} and not exists $options->{owner} ) {
             $arg->{owner} = -1;    # chown will leave owner unchanged
+        }
+        for (my ($k,$v) = each %{$options}) {
+            $arg->{$k} = $v;
         }
         $paths = [@_];
     }
@@ -163,15 +168,18 @@ sub _mkpath {
 
                 # NB: $arg->{group} guaranteed to be set during initialisation
                 if ( !chown $arg->{owner}, $arg->{group}, $path ) {
-                    _error( $arg,
-"Cannot change ownership of $path to $arg->{owner}:$arg->{group}"
+                    _error(
+                        $arg,
+                        "Cannot change ownership of $path to $arg->{owner}:$arg->{group}"
                     );
                 }
             }
             if ( exists $arg->{chmod} ) {
                 if ( !chmod $arg->{chmod}, $path ) {
-                    _error( $arg,
-                        "Cannot change permissions of $path to $arg->{chmod}" );
+                    _error(
+                        $arg,
+                        "Cannot change permissions of $path to $arg->{chmod}"
+                    );
                 }
             }
         }
