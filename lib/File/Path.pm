@@ -6,6 +6,7 @@ use strict;
 use Cwd 'getcwd';
 use File::Basename ();
 use File::Spec     ();
+use Data::Dump;
 
 BEGIN {
     if ( $] < 5.006 ) {
@@ -96,12 +97,26 @@ sub mkpath {
         $arg->{mode} = defined $mode ? $mode : oct '777';
     }
     else {
-        $arg = pop @_;
-        $arg->{mode} = delete $arg->{mask} if exists $arg->{mask};
-        $arg->{mode} = oct '777' unless exists $arg->{mode};
-        ${ $arg->{error} } = [] if exists $arg->{error};
-        $arg->{owner} = delete $arg->{user} if exists $arg->{user};
-        $arg->{owner} = delete $arg->{uid}  if exists $arg->{uid};
+        my $options = pop @_;
+        for my $opt ( qw| chmod verbose | ) {
+            $arg->{$opt} = delete $options->{$opt} if exists $options->{$opt};
+        }
+        $arg->{mode}    = delete $options->{mask}     if exists $options->{mask};
+#        $arg->{mode} = oct '777' unless exists $arg->{mode};
+        if (exists $options->{mode}) {
+            $arg->{mode} = delete $options->{mode};
+        }
+        else {
+            $arg->{mode} = oct '777';
+        }
+#        ${ $arg->{error} } = [] if exists $options->{error};
+        if (exists $options->{error}) {
+            ${ $arg->{error} } = [];
+            delete $options->{error};
+        }
+        $arg->{owner} = delete $options->{user}   if exists $options->{user};
+        $arg->{owner} = delete $options->{uid}    if exists $options->{uid};
+        $arg->{owner} = delete $options->{owner}  if exists $options->{owner};
         if ( exists $arg->{owner} and $arg->{owner} =~ /\D/ ) {
             my $uid = ( getpwnam $arg->{owner} )[2];
             if ( defined $uid ) {
@@ -111,9 +126,10 @@ sub mkpath {
                 _error( $arg,
 "unable to map $arg->{owner} to a uid, ownership not changed"
                 );
-                delete $arg->{owner};
+#                delete $arg->{owner};
             }
         }
+        $arg->{group} = delete $options->{group}  if exists $options->{group};
         if ( exists $arg->{group} and $arg->{group} =~ /\D/ ) {
             my $gid = ( getgrnam $arg->{group} )[2];
             if ( defined $gid ) {
@@ -123,7 +139,7 @@ sub mkpath {
                 _error( $arg,
 "unable to map $arg->{group} to a gid, group ownership not changed"
                 );
-                delete $arg->{group};
+#                delete $arg->{group};
             }
         }
         if ( exists $arg->{owner} and not exists $arg->{group} ) {
@@ -132,6 +148,10 @@ sub mkpath {
         if ( exists $arg->{group} and not exists $arg->{owner} ) {
             $arg->{owner} = -1;    # chown will leave owner unchanged
         }
+say STDERR "AAA: options";
+Data::Dump::pp($options);
+say STDERR "BBB: arg";
+Data::Dump::pp($arg);
         $paths = [@_];
     }
     return _mkpath( $arg, $paths );
