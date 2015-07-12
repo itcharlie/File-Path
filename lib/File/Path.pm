@@ -112,7 +112,7 @@ sub mkpath {
 #        ${ $arg->{error} } = [] if exists $options->{error};
         if (exists $options->{error}) {
             ${ $arg->{error} } = [];
-            delete $options->{error};
+#            delete $options->{error};
         }
         $arg->{owner} = delete $options->{user}   if exists $options->{user};
         $arg->{owner} = delete $options->{uid}    if exists $options->{uid};
