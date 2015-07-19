@@ -3,7 +3,7 @@
 
 use strict;
 
-use Test::More tests => 159;
+use Test::More tests => 160;
 use Config;
 use Fcntl ':mode';
 
@@ -737,36 +737,6 @@ cannot remove directory for [^:]+: .* at \1 line \2},
         'make_path verbose with final hashref'
     );
 
-    # {
-    #     local $@;
-    #     eval {
-    #         @created = make_path(
-    #             $dir,
-    #             $dir2,
-    #             { verbose => 1, mode => 0711, foo => 1, bar => 1 }
-    #         );
-    #     };
-    #     like($@,
-    #         qr/Unrecognized option\(s\) passed to make_path\(\):.*?bar.*?foo/,
-    #         'make_path with final hashref failed due to unrecognized options'
-    #     );
-    # }
-    #
-    # {
-    #     local $@;
-    #     eval {
-    #         @created = remove_tree(
-    #             $dir,
-    #             $dir2,
-    #             { verbose => 1, foo => 1, bar => 1 }
-    #         );
-    #     };
-    #     like($@,
-    #         qr/Unrecognized option\(s\) passed to remove_tree\(\):.*?bar.*?foo/,
-    #         'remove_tree with final hashref failed due to unrecognized options'
-    #     );
-    # }
-
     stdout_is(
         sub {
             @created = remove_tree(
@@ -778,6 +748,14 @@ cannot remove directory for [^:]+: .* at \1 line \2},
         "rmdir $dir\nrmdir $dir2\n",
         'remove_tree verbose with final hashref'
     );
+
+    # Have to re-create these 2 directories so that next block is not skipped.
+    @created = make_path(
+        $dir,
+        $dir2,
+        { mode => 0711 }
+    );
+    is(@created, 2, "2 directories created");
 
     SKIP: {
         $file = catdir($dir2, "file");
