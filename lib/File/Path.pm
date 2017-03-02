@@ -639,7 +639,7 @@ The following keys are recognised in the option hash:
 =item mode => $num
 
 The numeric permissions mode to apply to each created directory
-(defaults to 0777), to be modified by the current C<umask>. If the
+(defaults to C<0777>), to be modified by the current C<umask>. If the
 directory already exists (and thus does not need to be created),
 the permissions will not be modified.
 
@@ -677,7 +677,7 @@ in an C<eval> block.
 If present, will cause any created directory to be owned by C<$owner>.
 If the value is numeric, it will be interpreted as a uid, otherwise
 as username is assumed. An error will be issued if the username cannot be
-mapped to a uid, or the uid does not exist, or the process lacks the
+mapped to a uid, the uid does not exist or the process lacks the
 privileges to change ownership.
 
 Ownership of directories that already exist will not be changed.
@@ -689,7 +689,7 @@ C<user> and C<uid> are aliases of C<owner>.
 If present, will cause any created directory to be owned by the group C<$group>.
 If the value is numeric, it will be interpreted as a gid, otherwise
 as group name is assumed. An error will be issued if the group name cannot be
-mapped to a gid, or the gid does not exist, or the process lacks the
+mapped to a gid, the gid does not exist or the process lacks the
 privileges to change group ownership.
 
 Group ownership of directories that already exist will not be changed.
@@ -706,9 +706,9 @@ Group ownership of directories that already exist will not be changed.
 
 =item mkpath( $dir1, $dir2,..., \%opt )
 
-The mkpath() function provide the legacy interface of make_path() with
+The C<mkpath()> function provide the legacy interface of C<make_path()> with
 a different interpretation of the arguments passed.  The behaviour and
-return value of the function is otherwise identical to make_path().
+return value of the function is otherwise identical to C<make_path()>.
 
 =item remove_tree( $dir1, $dir2, .... )
 
@@ -791,10 +791,10 @@ of hand. This is the safest course of action.
 
 =item rmtree( $dir1, $dir2,..., \%opt )
 
-The rmtree() function provide the legacy interface of remove_tree()
+The C<rmtree()> function provide the legacy interface of C<remove_tree()>
 with a different interpretation of the arguments passed. The behaviour
 and return value of the function is otherwise identical to
-remove_tree().
+C<remove_tree()>.
 
 =back
 
@@ -813,9 +813,9 @@ C<make_path> or C<remove_tree>, you should take additional precautions.
 
 =back
 
-If C<make_path> or C<remove_tree> encounter an error, a diagnostic
+If C<make_path> or C<remove_tree> encounters an error, a diagnostic
 message will be printed to C<STDERR> via C<carp> (for non-fatal
-errors), or via C<croak> (for fatal errors).
+errors) or via C<croak> (for fatal errors).
 
 If this behaviour is not desirable, the C<error> attribute may be
 used to hold a reference to a variable, which will be used to store
@@ -907,7 +907,7 @@ can always be trapped with C<eval>, but it's not a good idea. Under
 the circumstances, dying is the best thing to do).
 
 SEVERE errors may be trapped using the modern interface. If the
-they are not trapped, or the old interface is used, such an error
+they are not trapped, or if the old interface is used, such an error
 will cause the program will halt.
 
 All other errors may be trapped using the modern interface, otherwise
@@ -918,7 +918,7 @@ they will be C<carp>ed about. Program execution will not be halted.
 =item mkdir [path]: [errmsg] (SEVERE)
 
 C<make_path> was unable to create the path. Probably some sort of
-permissions error at the point of departure, or insufficient resources
+permissions error at the point of departure or insufficient resources
 (such as free inodes on Unix).
 
 =item No root path(s) specified
@@ -1087,15 +1087,15 @@ to examining directory trees.
 
 The following describes F<File::Path> limitations and how to report bugs.
 
-=head2 MULTITHREAD APPLICATIONS
+=head2 MULTITHREADED APPLICATIONS
 
-F<File::Path> B<rmtree> and B<remove_tree> will not work with multithreaded
-applications due to its use of B<chdir>.  At this time, no warning or error
-results and you will certainly encounter unexpected results.
+F<File::Path> C<rmtree> and C<remove_tree> will not work with multithreaded
+applications due to its use of C<chdir>.  At this time, no warning or error
+is generated in this situation.  You will certainly encounter unexpected results.
 
 The implementation that surfaces this limitation will not be changed. See the
-F<File::Path::Tiny> module for functionality similar to F<File::Path> but does
-not B<chdir>.
+F<File::Path::Tiny> module for functionality similar to F<File::Path> but which does
+not C<chdir>.
 
 =head2 NFS Mount Points
 
