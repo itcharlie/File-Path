@@ -18,7 +18,7 @@ BEGIN {
 
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
-$VERSION   = '2.12_007';
+$VERSION   = '2.12_008';
 $VERSION   = eval $VERSION;
 @ISA       = qw(Exporter);
 @EXPORT    = qw(mkpath rmtree);
@@ -400,21 +400,32 @@ sub _rmtree {
 
                 # see if we can escalate privileges to get in
                 # (e.g. funny protection mask such as -w- instead of rwx)
-                $perm &= oct '7777';
-                my $nperm = $perm | oct '700';
-                if (
-                    !(
-                           $data->{safe}
-                        or $nperm == $perm
-                        or chmod( $nperm, $root )
-                    )
-                  )
-                {
-                    _error( $data,
-                        "cannot make child directory read-write-exec", $canon );
-                    next ROOT_DIR;
+                # This uses fchmod to avoid traversing outside of the proper
+                # location (CVE-2017-6512)
+                my $root_fh;
+                if (open($root_fh, '<', $root)) {
+                    my ($fh_dev, $fh_inode) = (stat $root_fh )[0,1];
+                    $perm &= oct '7777';
+                    my $nperm = $perm | oct '700';
+                    local $@;
+                    if (
+                        !(
+                            $data->{safe}
+                           or $nperm == $perm
+                           or !-d _
+                           or $fh_dev ne $ldev
+                           or $fh_inode ne $lino
+                           or eval { chmod( $nperm, $root_fh ) }
+                        )
+                      )
+                    {
+                        _error( $data,
+                            "cannot make child directory read-write-exec", $canon );
+                        next ROOT_DIR;
+                    }
+                    close $root_fh;
                 }
-                elsif ( !chdir($root) ) {
+                if ( !chdir($root) ) {
                     _error( $data, "cannot chdir to child", $canon );
                     next ROOT_DIR;
                 }
@@ -622,7 +633,7 @@ File::Path - Create or remove directory trees
 
 =head1 VERSION
 
-2.12_007 - released April 22 2017.
+2.12_008 - released May 07 2017.
 
 =head1 SYNOPSIS
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension File::Path.
 
+2.12_008 2017-05-07
+    - Patch from John Lightsey.
+
 2.12_007 2017-04-22
     - Skip tests where filesystem doesn't support permissions (RT 121248).
     - Add AppVeyor configuration; thanks to Charlie Gonzalez and Hayo Baan.
